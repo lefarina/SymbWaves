@@ -42,6 +42,13 @@ print("Concatenação concluída.")
 # --- Cálculos Físicos e Adimensionais ---
 print("Calculando variáveis físicas...")
 df_final['u10'] = np.sqrt(df_final['u10_comp']**2 + df_final['v10_comp']**2)
+
+# --- NOVAS FEATURES DE COMPONENTES ADIMENSIONAIS DO VENTO ---
+# Normaliza as componentes pela magnitude do vento. O resultado é o cosseno e o seno do ângulo da direção.
+df_final['u10_cosine'] = df_final['u10_comp'] / (df_final['u10'] + 1e-6)
+df_final['u10_sine'] = df_final['v10_comp'] / (df_final['u10'] + 1e-6)
+
+
 df_final['u10_n'] = (df_final['u10']**2) / 9.81
 df_final['Peak_period_n'] = (9.81 * df_final['Peak_period']) / (df_final['u10'] + 1e-6)
 df_final['Wave_age'] = df_final['Peak_period_n'] / (2 * np.pi)

@@ -6,11 +6,11 @@ processed_df_path = './data/processed/era5_structured_weighted.csv'
 
 # --- Configurações do Modelo Preditivo ---
 # Use 'True' para treinar um novo modelo, 'False' para carregar um salvo
-new_train = False
+new_train = True
 
 # Caminho para o arquivo pkl do modelo salvo (ex: 'hall_of_fame_2025-09-12_100000.pkl')
 # O PySR gera esse nome automaticamente. Atualize aqui para carregar um modelo específico.
-model_saved_path = 'outputs/20250912_102924_Dzyrmx'  # Exemplo - use o nome real da sua pasta
+model_saved_path = 'outputs/20250912_232128_lIRTu5'  # Exemplo - use o nome real da sua pasta
 # Número total de iterações para o PySR
 total_iterations = 150
 
@@ -18,12 +18,12 @@ total_iterations = 150
 # Data de início para o conjunto de treinamento
 train_initial_date = '2018-01-01'
 # Data de início para o conjunto de teste (dados que o modelo não verá no treino)
-test_initial_date = '2018-03-31'
+test_initial_date = '2019-01-01'
 
 
 # --- Definição das Features (Variáveis de Entrada) ---
 # Usamos a Idade da Onda e a localização para uma previsão genuína
-feature_var = ['Wave_age', 'lon_norm']
+feature_var = ['Wave_age', 'lon_norm'] 
 
 # --- Definição do Alvo (Variável de Saída) ---
 # O alvo é o 'y' adimensional
