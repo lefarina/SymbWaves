@@ -1,60 +1,85 @@
-# --- Configurações Gerais ---
-# Caminho para o arquivo de dados NetCDF bruto
+# -*- coding: utf-8 -*-
+
+# ===========================
+# CAMINHOS
+# ===========================
 raw_df_path = './data/raw/dados_atlantico2013_2024.nc'
-# Caminho onde os dados processados serão salvos
 processed_df_path = './data/processed/era5_structured_weighted.csv'
 
-# --- Configurações do Modelo Preditivo ---
-# Use 'True' para treinar um novo modelo, 'False' para carregar um salvo
+# ===========================
+# TREINAMENTO / MODELO
+# ===========================
 new_train = True
-
-# Caminho para o arquivo pkl do modelo salvo (ex: 'hall_of_fame_2025-09-12_100000.pkl')
-# O PySR gera esse nome automaticamente. Atualize aqui para carregar um modelo específico.
-model_saved_path = 'outputs/20250912_232128_lIRTu5'  # Exemplo - use o nome real da sua pasta
-# Número total de iterações para o PySR
+model_saved_path = 'outputs/20250912_232128_lIRTu5'  # usar ao carregar modelo existente
 total_iterations = 150
 
-# --- Definições de Período ---
-# Data de início para o conjunto de treinamento
+# Split temporal
 train_initial_date = '2018-01-01'
-# Data de início para o conjunto de teste (dados que o modelo não verá no treino)
-test_initial_date = '2019-01-01'
+test_initial_date  = '2019-12-31'
 
+# ===========================
+# FEATURES E ALVO
+# ===========================
+# Mantemos a lista original; você pode trocar para ['Wave_age','lon_sin','lon_cos'] quando desejar.
+#feature_var = ['Wave_age', 'lon_norm']
+feature_var = ['Wave_age', 'Hs_mean_train']
 
-# --- Definição das Features (Variáveis de Entrada) ---
-# Usamos a Idade da Onda e a localização para uma previsão genuína
-feature_var = ['Wave_age', 'lon_norm'] 
+# Alvo adimensional (sem log): y = g*Hs / u10^2
+target_var = 'y'
 
-# --- Definição do Alvo (Variável de Saída) ---
-# O alvo é o 'y' adimensional
-target_var = ['y']
-
-# --- Configurações dos Pesos de Amostra ---
+# ===========================
+# PESOS
+# ===========================
 WEIGHT_SETTINGS = {
-    # Mude para 'True' para ativar a ponderação, 'False' para desativar
-    'apply': True,
-    
-    # Limiar de Tp* para considerar "wind sea" (ondas jovens)
-    'low_Tp_star_threshold': 1.1,
-    
-    # Limiar de Tp* para considerar "swell" (ondas velhas)
-    'high_Tp_star_threshold': 2.5,
-    
-    # Fator de importância para os extremos (1.5 significa 150% de peso extra)
-    'boost_factor': 1.5
+    'apply': False,
+    'boost_factor': 3.0            # +150% nas caudas
 }
 
-# --- Configurações da Inferência/Previsão ---
-# Data e hora para gerar o mapa de previsão
+# ===========================
+# VISUALIZAÇÃO
+# ===========================
 region_time = '2022-04-06 12:00:00'
-
-
-# Mude para True para gerar o mapa de previsão no final do script
 run_prediction_map = True
-
-# O nome do arquivo de imagem que será salvo na pasta /results
 output_filename = 'mapa_previsao_final.png'
 
+# ===========================
+# AMOSTRAGEM / REPRODUTIBILIDADE
+# ===========================
+N_SAMPLES = 45000
+random_state = 42
 
+# ===========================
+# MÉTRICAS
+# ===========================
+mape_floor_y = 1e-6   # piso no denominador do MAPE(y)
+log_floor_y  = 1e-9   # piso para log10(y) no diagnóstico
 
+# ===========================
+# BARRAS DE PROGRESSO / VERBOSIDADE
+# ===========================
+use_vectorized = True        # True: caminho rápido (xarray->DataFrame)
+show_grid_progress = True    # se usar laço ponto-a-ponto, mostra tqdm
+pysr_verbosity = 1           # 0=silent, 1=padrão com barra/ETA, 2=detalhado
+
+# ===========================
+# PySR / BATCHING
+# ===========================
+use_batching = True
+batch_size = 10_000
+
+# ===========================
+# MODO DE DOIS MODELOS (GATING)
+# ===========================
+use_dual_models = True          # <<< LIGA/DESLIGA dois modelos
+gating_type = 'logistic'        # 'logistic' (recomendado) ou 'piecewise'
+
+# Parâmetros do gating logístico em Wave_age:
+# w = sigmoid((Wave_age - logistic_center) / logistic_width)
+logistic_center = 0.30          # ~ Tp* ≈ 2π*0.30 ≈ 1.885 (centro da transição)
+logistic_width  = 0.06          # largura da transição (quanto menor, mais abrupta)
+
+# Parâmetros para piecewise (se usar):
+# definimos em Tp* por clareza, e o script converte para Wave_age = Tp*/(2π)
+piecewise_tpstar_young = 1.3
+piecewise_tpstar_old   = 2.0
 
