@@ -69,3 +69,13 @@ data/processed/*.csv
 # Resultados e modelos salvos
 results/
 outputs/
+# Ambiente e artefatos
+.venv/
+__pycache__/
+*.pyc
+outputs/
+results/
+models/
+*.log
+# Dados grandes
+/data/
