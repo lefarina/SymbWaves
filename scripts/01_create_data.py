@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-sys.path.append('.')
-
 import numpy as np
 import pandas as pd
 import xarray as xr
 from tqdm import tqdm
 
-from config import config_weighted as config
+# Import the config file from the current directory
+import config
 
 G   = 9.81
 EPS = 1e-6
@@ -78,8 +77,9 @@ def main():
     print("Carregando arquivo NetCDF bruto...")
     ds = xr.open_dataset(config.raw_df_path)
 
-    if config.use_vectorized:
-        pbar = tqdm(total=4, desc="Pré-processamento (vetorizado)", leave=True)
+    if hasattr(config, 'use_vectorized') and config.use_vectorized:
+        # Increased total from 4 to 5 for the new step
+        pbar = tqdm(total=5, desc="Pré-processamento (vetorizado)", leave=True)
 
         # Fase 1: dataframe vetorizado
         df = ds[['swh', 'u10', 'v10', 'pp1d']].to_dataframe().reset_index()
@@ -96,26 +96,43 @@ def main():
         df['y'] = df['Hs'] / (df['u10_n'] + EPS)
         pbar.update(1)
 
-        # Fase 3: normalização e codificação cíclica de longitude
+        # ======================================================================
+        # --- MODIFICATION START: ADDED STEEPNESS CALCULATION ---
+        # ======================================================================
+        # Fase 3: Engenharia da feature de Steepness
+        print("\nEngineering new feature: Instantaneous Wave Steepness...")
+        # 1. Calculate Wavelength (L) from Peak Period (T) in deep water
+        #    Formula: L = (g * T^2) / (2 * pi)
+        df['Wavelength'] = (G * df['Peak_period']**2) / (2 * np.pi)
+        
+        # 2. Calculate Wave Steepness (Hs / L)
+        df['Steepness'] = df['Hs'] / (df['Wavelength'] + EPS)
+        pbar.update(1)
+        # ======================================================================
+        # --- MODIFICATION END ---
+        # ======================================================================
+
+        # Fase 4: normalização e codificação cíclica de longitude
         lat_min, lat_max = df['latitude'].min(),  df['latitude'].max()
         lon_min, lon_max = df['longitude'].min(), df['longitude'].max()
         df['lat_norm'] = (df['latitude']  - lat_min) / (lat_max - lat_min + EPS)
         df['lon_norm'] = (df['longitude'] - lon_min) / (lon_max - lon_min + EPS)
 
-        # NOVO: codificação cíclica (opcional nas features)
         lon_rad = np.deg2rad(df['longitude'])
         df['lon_sin'] = np.sin(lon_rad)
         df['lon_cos'] = np.cos(lon_rad)
         pbar.update(1)
 
-        # Fase 4: seleção e salvamento
+        # Fase 5: seleção e salvamento
         final_cols = [
             'Time', 'latitude', 'longitude',
             'Hs', 'u10', 'v10', 'u10_mod',
             'Peak_period', 'Peak_period_n',   # Tp*
             'u10_n', 'Wave_age',
-            'y', 'lat_norm', 'lon_norm',
-            'lon_sin', 'lon_cos',             # novos
+            'y',
+            'Steepness', # <-- ADDED NEW FEATURE
+            'lat_norm', 'lon_norm',
+            'lon_sin', 'lon_cos',
             'u10_cosine', 'u10_sine',
         ]
         df = df[final_cols]
@@ -128,19 +145,20 @@ def main():
         pbar.update(1)
         pbar.close()
 
-    else:
+    else: # Non-vectorized path (also updated for consistency)
         lats = ds.latitude.values
         lons = ds.longitude.values
         grid_points = [(lo, la) for lo in lons for la in lats]
         print(f"Processando grade: {len(grid_points)} pontos...")
 
         frames = []
-        for lo, la in tqdm(grid_points, desc="Montando DataFrame (laço)", disable=not config.show_grid_progress):
+        for lo, la in tqdm(grid_points, desc="Montando DataFrame (laço)", disable=not hasattr(config, 'show_grid_progress') or not config.show_grid_progress):
             frames.append(_space_df(ds, la, lo))
         df = pd.concat(frames, ignore_index=True)
 
-        pbar = tqdm(total=3, desc="Pós-processamento", leave=True)
+        pbar = tqdm(total=4, desc="Pós-processamento", leave=True)
 
+        # Step 1: Base physics
         df['u10_mod'] = np.sqrt(df['u10']**2 + df['v10']**2)
         df['u10_cosine'] = df['u10'] / (df['u10_mod'] + EPS)
         df['u10_sine']   = df['v10'] / (df['u10_mod'] + EPS)
@@ -150,23 +168,28 @@ def main():
         df['y'] = df['Hs'] / (df['u10_n'] + EPS)
         pbar.update(1)
 
+        # Step 2: Steepness
+        df['Wavelength'] = (G * df['Peak_period']**2) / (2 * np.pi)
+        df['Steepness'] = df['Hs'] / (df['Wavelength'] + EPS)
+        pbar.update(1)
+
+        # Step 3: Normalization
         lat_min, lat_max = df['latitude'].min(),  df['latitude'].max()
         lon_min, lon_max = df['longitude'].min(), df['longitude'].max()
         df['lat_norm'] = (df['latitude']  - lat_min) / (lat_max - lat_min + EPS)
         df['lon_norm'] = (df['longitude'] - lon_min) / (lon_max - lon_min + EPS)
-
         lon_rad = np.deg2rad(df['longitude'])
         df['lon_sin'] = np.sin(lon_rad)
         df['lon_cos'] = np.cos(lon_rad)
         pbar.update(1)
 
+        # Step 4: Finalize and save
         final_cols = [
             'Time', 'latitude', 'longitude',
             'Hs', 'u10', 'v10', 'u10_mod',
             'Peak_period', 'Peak_period_n',
-            'u10_n', 'Wave_age',
-            'y', 'lat_norm', 'lon_norm',
-            'lon_sin', 'lon_cos',
+            'u10_n', 'Wave_age', 'y', 'Steepness',
+            'lat_norm', 'lon_norm', 'lon_sin', 'lon_cos',
             'u10_cosine', 'u10_sine'
         ]
         df = df[final_cols]
@@ -179,9 +202,8 @@ def main():
         pbar.update(1)
         pbar.close()
 
-    print(f"OK: {config.processed_df_path}")
+    print(f"OK: Processed data saved to {config.processed_df_path}")
 
 
 if __name__ == "__main__":
     main()
-
