@@ -36,7 +36,7 @@ total_iterations = 200
 #  DATA SPLIT & SAMPLING
 # ===========================
 train_initial_date = '2018-01-01'
-test_initial_date  = '2020-12-31'
+test_initial_date  = '2022-12-31'
 N_SAMPLES = 50_000
 random_state = 42
 
