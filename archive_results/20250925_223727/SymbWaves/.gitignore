@@ -69,5 +69,3 @@ data/processed/*.csv
 # Resultados e modelos salvos
 results/
 outputs/
-
-
