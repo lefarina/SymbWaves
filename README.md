@@ -18,7 +18,7 @@ A abordagem deste projeto é construída sobre três pilares fundamentais da mod
 
 2.  **Engenharia de Features Físicas:** As entradas do modelo não são dados brutos, mas sim parâmetros adimensionais com significado físico claro, como a **Idade da Onda** (`Wave_age`) e a **localização normalizada** (`lat_norm`, `lon_norm`).
 
-3.  **Regressão Ponderada (Weighted Regression):** Para lidar com a complexidade dos diferentes regimes de mar (Wind Sea vs. Swell), o modelo emprega um sistema de pesos. As amostras de dados que representam regimes físicos claros (ondas muito jovens ou muito velhas) recebem uma importância maior durante o treinamento. Isso guia o algoritmo a encontrar uma fórmula que seja excelente nos casos mais importantes, em vez de ser medíocre em todos.
+3. Modelo Híbrido por Regimes (Hybrid Piecewise Model): Para lidar com a complexidade dos diferentes regimes de mar, a abordagem final utiliza um sistema de múltiplos modelos. Os dados são segmentados em três regimes físicos distintos baseados na Idade da Onda (Wave_age): Mar Local (Wind-Sea), Marulho Estável (Stable Swell) e Marulho Extremo (Extreme Swell). Um modelo especializado é treinado para cada regime, permitindo que a regressão simbólica encontre a fórmula ideal para as condições bem-comportadas, enquanto um modelo linear mais simples garante a estabilidade nas condições extremas e raras. Esta estratégia se mostrou mais robusta e precisa do que o uso de pesos em um modelo único.
 
 ## Estrutura do Projeto
 
