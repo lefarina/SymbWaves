@@ -80,7 +80,7 @@ Antes de treinar, você precisa converter seus dados brutos (NetCDF) em um arqui
 2.  **Ajuste os parâmetros** no arquivo `config/config_weighted.py`, principalmente o `raw_df_path` e o `processed_df_path`.
 3.  **Execute o script de criação de dados:**
     ```bash
-    python scripts/01_create_data_v2.py
+    python scripts/01_create_data.py
     ```
     Este processo pode levar um tempo considerável, dependendo do tamanho do seu dataset.
 
@@ -91,7 +91,7 @@ Com o arquivo CSV processado pronto, você pode iniciar o treinamento do modelo 
 1.  **Ajuste os parâmetros de treinamento** no arquivo `config/config_weighted.py`, como `total_iterations`, `feature_var` e as configurações de peso (`WEIGHT_SETTINGS`).
 2.  **Execute o script de treinamento:**
     ```bash
-    python scripts/02_run_pysr_weighted.py
+    python scripts/02_symbwaves.py
     ```
 3.  **Analise os Resultados:** O script irá imprimir a equação final encontrada pelo PySR. Os resultados visuais (mapas, gráficos) e os modelos salvos estarão nas pastas `results/` e `outputs/`.
 
