@@ -77,7 +77,7 @@ O processo é dividido em duas etapas principais:
 Antes de treinar, você precisa converter seus dados brutos (NetCDF) em um arquivo CSV limpo e com todas as features calculadas.
 
 1.  **Coloque seus dados brutos** na pasta `data/raw/`.
-2.  **Ajuste os parâmetros** no arquivo `config/config_weighted.py`, principalmente o `raw_df_path` e o `processed_df_path`.
+2.  **Ajuste os parâmetros** no arquivo `config/config.py`, principalmente o `raw_df_path` e o `processed_df_path`.
 3.  **Execute o script de criação de dados:**
     ```bash
     python scripts/01_create_data.py
