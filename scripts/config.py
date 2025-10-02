@@ -19,10 +19,14 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 #  PATHS (Now built from PROJECT_ROOT)
 # ===========================
 # Path to the raw NetCDF file
-raw_df_path = os.path.join(PROJECT_ROOT, 'data', 'raw', 'dados_atlantico2013_2024.nc')
+raw_df_path = os.path.join(PROJECT_ROOT, 'data', 'raw', 'dados_full2018_2023.nc')
 # Path for the processed CSV data
-processed_df_path = os.path.join(PROJECT_ROOT, 'data', 'processed', 'era5_structured_weighted.csv')
+processed_df_path = os.path.join(PROJECT_ROOT, 'data', 'processed', 'era5_structured.csv')
 
+# ===========================
+#  GENERAL SETTINGS
+# ===========================
+use_vectorized = True
 
 # ===========================
 #  MODEL TRAINING
@@ -49,8 +53,9 @@ random_state = 42
 # the dominant wave regime (wind-sea vs. swell) at each location.
 feature_var = [
     'Wave_age',
-#    'Hs_mean_train',
-    'Steepness_mean_train' # <-- The new feature is now active
+    'mdts_cos',
+#    'mdts_sin',
+#    'Steepness_mean_train' 
 ]
 
 # Target variable for the regression.
