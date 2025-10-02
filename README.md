@@ -30,7 +30,7 @@ SymbWaves/
 │   └── config_weighted.py      # Painel de controle para todos os parâmetros do experimento.
 ├── scripts/
 │   ├── 01_create_data.py    # Script para ler dados brutos (NetCDF) e gerar o CSV processado.
-│   └── 02_symbwaves.py # Script para treinar o modelo PySR com pesos.
+│   └── 02_symbwaves.py      # Script para treinar o modelo PySR com pesos.
 ├── data/
 │   ├── raw/                    # Onde os dados brutos (ex: .nc) devem ser colocados.
 │   └── processed/              # Onde os arquivos CSV gerados são salvos.
