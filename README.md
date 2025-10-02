@@ -29,8 +29,8 @@ SymbWaves/
 ├── config/
 │   └── config_weighted.py      # Painel de controle para todos os parâmetros do experimento.
 ├── scripts/
-│   ├── 01_create_data_v2.py    # Script para ler dados brutos (NetCDF) e gerar o CSV processado.
-│   └── 02_run_pysr_weighted.py # Script para treinar o modelo PySR com pesos.
+│   ├── 01_create_data.py    # Script para ler dados brutos (NetCDF) e gerar o CSV processado.
+│   └── 02_symbwaves.py # Script para treinar o modelo PySR com pesos.
 ├── data/
 │   ├── raw/                    # Onde os dados brutos (ex: .nc) devem ser colocados.
 │   └── processed/              # Onde os arquivos CSV gerados são salvos.
@@ -88,7 +88,7 @@ Antes de treinar, você precisa converter seus dados brutos (NetCDF) em um arqui
 
 Com o arquivo CSV processado pronto, você pode iniciar o treinamento do modelo de regressão simbólica.
 
-1.  **Ajuste os parâmetros de treinamento** no arquivo `config/config_weighted.py`, como `total_iterations`, `feature_var` e as configurações de peso (`WEIGHT_SETTINGS`).
+1.  **Ajuste os parâmetros de treinamento** no arquivo `config.py`, como `total_iterations`, `feature_var` e as configurações de peso (`WEIGHT_SETTINGS`).
 2.  **Execute o script de treinamento:**
     ```bash
     python scripts/02_symbwaves.py
