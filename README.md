@@ -26,18 +26,16 @@ O projeto é organizado de forma modular para separar configuração, processame
 
 ```
 SymbWaves/
-├── config/
-│   └── config_weighted.py      # Painel de controle para todos os parâmetros do experimento.
 ├── scripts/
-│   ├── 01_create_data.py    # Script para ler dados brutos (NetCDF) e gerar o CSV processado.
-│   └── 02_symbwaves.py      # Script para treinar o modelo PySR com pesos.
+│   ├── config.py            # Painel de controle para todos os parâmetros.
+│   ├── 01_create_data.py    # Lê dados brutos (NetCDF) e gera o CSV processado.
+│   └── 02_symbwaves.py      # Treina o modelo, avalia e gera os resultados.
 ├── data/
-│   ├── raw/                    # Onde os dados brutos (ex: .nc) devem ser colocados.
-│   └── processed/              # Onde os arquivos CSV gerados são salvos.
-├── results/                    # Onde os gráficos e mapas de resultados são salvos.
-├── outputs/                    # Onde os modelos treinados são salvos (.pkl).
-├── .gitignore                  # Especifica quais arquivos o Git deve ignorar.
-└── README.md                   # Este arquivo.
+│   ├── raw/                 # Local para os arquivos NetCDF brutos (ignorado pelo Git).
+│   └── processed/           # Local para os arquivos CSV gerados (ignorado pelo Git).
+├── results/
+│                              # Local onde os gráficos e plots são salvos (ignorado pelo Git).
+└── README.md                  # Este arquivo.
 ```
 
 ## Como Começar
