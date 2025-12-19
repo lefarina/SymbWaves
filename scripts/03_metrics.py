@@ -32,7 +32,7 @@ def run_comprehensive_analysis(file_path):
         return
 
     save_dir = os.path.dirname(file_path) # Saves in the same folder as the dataset
-    base_name = os.path.basename(file_path).replace('.csv', '')
+    base_name = os.path.basename(file_path).replace('.csv', '')[3:]
     df = pd.read_csv(file_path)
     df['Time'] = pd.to_datetime(df['Time'])
     print(f"Running full analysis for {base_name}...")
@@ -61,19 +61,19 @@ def run_comprehensive_analysis(file_path):
     
     # 1. BIAS
     grid_bias = metrics_df.pivot(index='latitude', columns='longitude', values='BIAS').values
-    plot_spatial_metric(axes[0,0], lons, lats, grid_bias.T, f'BIAS (Pred - Real): {base_name}', cmap='RdBu_r')
+    plot_spatial_metric(axes[0,0], lons, lats, grid_bias.T, f'BIAS --{base_name}', cmap='RdBu_r')
     
     # 2. RMSE
     grid_rmse = metrics_df.pivot(index='latitude', columns='longitude', values='RMSE').values
-    plot_spatial_metric(axes[0,1], lons, lats, grid_rmse.T, f'RMSE: {base_name}', cmap='YlOrRd')
+    plot_spatial_metric(axes[0,1], lons, lats, grid_rmse.T, f'RMSE -- {base_name}', cmap='YlOrRd')
     
     # 3. Scatter Index (SI)
     grid_si = metrics_df.pivot(index='latitude', columns='longitude', values='SI').values
-    plot_spatial_metric(axes[1,0], lons, lats, grid_si.T, f'Scatter Index (SI): {base_name}', cmap='magma_r')
+    plot_spatial_metric(axes[1,0], lons, lats, grid_si.T, f'Scatter Index (SI) -- {base_name}', cmap='magma_r')
     
     # 4. Correlation Coefficient (R2)
     grid_r2 = metrics_df.pivot(index='latitude', columns='longitude', values='R2').values
-    plot_spatial_metric(axes[1,1], lons, lats, grid_r2.T, f'$R^2$ Score: {base_name}', cmap='viridis', vmin=0, vmax=1)
+    plot_spatial_metric(axes[1,1], lons, lats, grid_r2.T, f'$R^2$ Score -- {base_name}', cmap='viridis', vmin=0, vmax=1)
 
     plt.tight_layout()
     plt.savefig(os.path.join(save_dir, f'spatial_all_metrics_{base_name}.png'), dpi=200)
@@ -83,8 +83,8 @@ def run_comprehensive_analysis(file_path):
     time_avg = df.groupby('Time')[['y_real', 'y_pred']].mean().reset_index()
     
     plt.figure(figsize=(15, 6))
-    plt.plot(time_avg['Time'], time_avg['y_real'], label='Truth ($y$)', color='black', lw=1.5)
-    plt.plot(time_avg['Time'], time_avg['y_pred'], label='Model ($\hat{y}$)', color='tab:red', linestyle='--')
+    plt.plot(time_avg['Time'], time_avg['y_real'], label='Mean Ground Truth ($y$) - ERA5', color='black', lw=1.5)
+    plt.plot(time_avg['Time'], time_avg['y_pred'], label='Mean SymbWaves prediction ($\hat{y}$)', color='tab:red', linestyle='--')
     plt.title(f"Averaged Temporal Trend: {base_name}")
     plt.ylabel("Non-dimensional Wave Height ($y$)")
     plt.legend()
@@ -105,8 +105,8 @@ def run_comprehensive_analysis(file_path):
     plt.plot(time_avg['y_real'], m*time_avg['y_real'] + b, color='red', 
              label=f'Fit: $y = {m:.2f}x + {b:.2f}$')
 
-    plt.xlabel('Ground Truth ($y$)')
-    plt.ylabel('Model Prediction ($\hat{y}$)')
+    plt.xlabel('Mean Ground Truth ($y$) - ERA5')
+    plt.ylabel('SymbWaves prediction ($\hat{y}$)')
     plt.title(f"Scatter Analysis: {base_name}\nCorr: {time_avg['y_real'].corr(time_avg['y_pred']):.3f}")
     plt.legend()
     plt.savefig(os.path.join(save_dir, f'scatter_reg_{base_name}.png'), dpi=200)
