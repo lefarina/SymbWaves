@@ -196,25 +196,61 @@ def evaluate_performance(y_true, y_pred, test_set, cfg):
     return {'mape_geral': mape_geral, 'mape_hs': mape_hs}
 
 def plot_single_map(ax, lon, lat, data, title, vmin, vmax, cmap='viridis'):
-    m = Basemap(ax=ax, projection='cyl', llcrnrlon=lon.min(), urcrnrlon=lon.max(), llcrnrlat=lat.min(), urcrnrlat=lat.max(), resolution=config.basemap_resolution)
-    m.drawcoastlines(color='gray', linewidth=0.6); m.fillcontinents(color='lightgray', lake_color='white')
-    m.drawparallels(np.arange(-90., 91., 10.), labels=[1,0,0,0], fontsize=8); m.drawmeridians(np.arange(-180., 181., 10.), labels=[0,0,0,1], fontsize=8)
-    if lon.ndim == 1: lons, lats = np.meshgrid(lon, lat)
-    else: lons, lats = lon, lat
-    cs = m.contourf(lons, lats, data, levels=20, cmap=cmap, vmin=vmin, vmax=vmax); m.colorbar(cs, location='right', pad='5%'); ax.set_title(title, fontsize=11)
+    # m = Basemap(ax=ax, projection='merc', llcrnrlon=lon.min(), urcrnrlon=lon.max(), 
+    #             llcrnrlat=lat.min(), urcrnrlat=lat.max(), 
+    #             resolution=config.basemap_resolution)
+    
+    # m.drawcoastlines(color='gray', linewidth=0.6)
+    # m.fillcontinents(color='lightgray', lake_color='white')
+    # m.drawparallels(np.arange(-90., 91., 10.), labels=[1,0,0,0], fontsize=8)
+    # m.drawmeridians(np.arange(-180., 181., 10.), labels=[0,0,0,1], fontsize=8)
 
-def generate_mean_maps(df, title_prefix, output_path):
+    m = Basemap(ax=ax,projection='merc', llcrnrlat=lat.min()-1, urcrnrlat=lat.max()+1,
+                 llcrnrlon=lon.min()-1, urcrnrlon=lon.max()+1, resolution='h')
+    m.drawcoastlines()
+    m.fillcontinents(color='coral', lake_color='aqua')
+    m.drawparallels(np.arange(lat.min(), lat.max()+1, 5), labels=[1,0,0,0])
+    m.drawmeridians(np.arange(lon.min(), lon.max()+1, 5), labels=[0,0,0,1])
+    
+    if lon.ndim == 1: 
+        lons, lats = np.meshgrid(lon, lat)
+    else: 
+        lons, lats = lon, lat
+    
+    # --- FIX START ---
+    # Create an array of levels spanning exactly vmin to vmax
+    # level_boundaries = np.linspace(vmin, vmax, 11) # 21 edges = 20 intervals
+    
+    # Pass this array to the 'levels' argument
+    # 'extend' adds arrows to the colorbar if data goes beyond vmin/vmax
+    cs = m.contourf(lons, lats, data, levels=10, latlon=True, cmap=cmap)
+    # --- FIX END ---
+    
+    m.colorbar(cs, location='right')
+    ax.set_title(title)
+
+# def plot_single_map(ax, lon, lat, data, title, vmin, vmax, cmap='viridis'):
+#     breakpoint()
+#     m = Basemap(ax=ax, projection='cyl', llcrnrlon=lon.min(), urcrnrlon=lon.max(), llcrnrlat=lat.min(), urcrnrlat=lat.max(), resolution=config.basemap_resolution)
+#     m.drawcoastlines(color='gray', linewidth=0.6); m.fillcontinents(color='lightgray', lake_color='white')
+#     m.drawparallels(np.arange(-90., 91., 10.), labels=[1,0,0,0], fontsize=8); m.drawmeridians(np.arange(-180., 181., 10.), labels=[0,0,0,1], fontsize=8)
+#     if lon.ndim == 1: lons, lats = np.meshgrid(lon, lat)
+#     else: lons, lats = lon, lat
+#     cs = m.contourf(lons, lats, data, levels=20, cmap=cmap, vmin=vmin, vmax=vmax); m.colorbar(cs, location='right', pad='5%'); ax.set_title(title, fontsize=11)
+
+def generate_mean_maps(df, title_prefix, output_path, mape_value):
     if df.empty: print(f"  Skipping mean map '{title_prefix}': No data."); return
     print(f"  Generating mean map for: {title_prefix}")
     mean_data = df.groupby(['latitude', 'longitude']).agg(y_pred_mean=('y_pred', 'mean'), y_real_mean=('y_real', 'mean'), mape_mean=('error', 'mean')).reset_index()
     lons, lats = mean_data['longitude'].unique(), mean_data['latitude'].unique()
     grid_pred, grid_real, grid_mape = mean_data.pivot(index='latitude', columns='longitude', values='y_pred_mean').values, mean_data.pivot(index='latitude', columns='longitude', values='y_real_mean').values, mean_data.pivot(index='latitude', columns='longitude', values='mape_mean').values
     vmin, vmax = np.nanmin([grid_pred, grid_real]), np.nanmax([grid_pred, grid_real]); fig, axes = plt.subplots(1, 3, figsize=(24, 8)); plt.subplots_adjust(wspace=0.3)
-    plot_single_map(axes[0], lons, lats, grid_pred.T, 'Mean Prediction (ŷ)', vmin, vmax); plot_single_map(axes[1], lons, lats, grid_real.T, 'Mean Ground Truth (y)', vmin, vmax); plot_single_map(axes[2], lons, lats, grid_mape.T, 'Mean MAPE (%)', 0, 100, cmap='Reds')
+    plot_single_map(axes[0], lons, lats, grid_pred.T, 'Mean Prediction (ŷ)', vmin, vmax); plot_single_map(axes[1], lons, lats, grid_real.T, 'Mean Ground Truth (y)', vmin, vmax); plot_single_map(axes[2], lons, lats, grid_mape.T, '$\Delta_{rel}$' + f' -- MAPE: {mape_value:.2f}%', 0, 100, cmap='Reds')
     fig.suptitle(f"{title_prefix} Performance", fontsize=16); plt.savefig(output_path, dpi=150, bbox_inches='tight'); plt.close(fig)
+    df.to_csv(output_path[0:51] + f'df_{title_prefix}.csv')
 
 def generate_visualizations(models, results_df, metrics, cfg):
-    print("6. Generating visualizations..."); results_dir = os.path.join(cfg.PROJECT_ROOT, 'results'); os.makedirs(results_dir, exist_ok=True)
+    print("6. Generating visualizations..."); results_dir = os.path.join(cfg.PROJECT_ROOT, 'results/atlantic/'); os.makedirs(results_dir, exist_ok=True)
     wa_y, wa_o = models['thresholds']['wa_y'], models['thresholds']['wa_o']
     daily_stats = results_df.set_index('Time').resample('D').mean(numeric_only=True)
     fig, ax1 = plt.subplots(figsize=(18, 6)); ax1.plot(daily_stats.index, daily_stats['error'], color='tab:red', alpha=0.7, label='Daily Mean Error')
@@ -229,15 +265,16 @@ def generate_visualizations(models, results_df, metrics, cfg):
     plt.figure(figsize=(12, 5)); mape_by_wa.plot(marker='o'); plt.title("MAPE vs. Wave Age"); plt.xlabel("Wave Age (cp/U10)")
     plt.ylabel("Mean MAPE (%)"); plt.grid(True, linestyle='--'); plt.savefig(os.path.join(results_dir, 'mape_vs_wave_age.png'), dpi=150, bbox_inches='tight'); plt.close()
     snapshot_time = pd.to_datetime(cfg.region_time); df_snapshot = results_df[results_df['Time'] == snapshot_time].copy()
+    mape_value = metrics['mape_geral']
     if not df_snapshot.empty:
         lons, lats = df_snapshot['longitude'].unique(), df_snapshot['latitude'].unique()
         grid_pred, grid_real, grid_err = df_snapshot.pivot(index='latitude', columns='longitude', values='y_pred').values, df_snapshot.pivot(index='latitude', columns='longitude', values='y_real').values, df_snapshot.pivot(index='latitude', columns='longitude', values='error').values
         vmin, vmax = np.nanmin([grid_pred, grid_real]), np.nanmax([grid_pred, grid_real]); fig, axes = plt.subplots(1, 3, figsize=(24, 8))
         plot_single_map(axes[0], lons, lats, grid_pred.T, 'Prediction (ŷ)', vmin, vmax); plot_single_map(axes[1], lons, lats, grid_real.T, 'Ground Truth (y)', vmin, vmax); plot_single_map(axes[2], lons, lats, grid_err.T, 'MAPE (%)', 0, 100, cmap='Reds')
         fig.suptitle(f"Snapshot Prediction for {snapshot_time}", fontsize=16); plt.savefig(os.path.join(results_dir, 'snapshot_map.png'), dpi=150, bbox_inches='tight'); plt.close(fig)
-    generate_mean_maps(results_df, "Overall", os.path.join(results_dir, 'mean_map_overall.png'))
-    generate_mean_maps(results_df[results_df['Wave_age'] <= wa_y], "Wind-Sea", os.path.join(results_dir, 'mean_map_windsea.png'))
-    generate_mean_maps(results_df[results_df['Wave_age'] >= wa_o], "Swell", os.path.join(results_dir, 'mean_map_swell.png'))
+    generate_mean_maps(results_df, "Overall", os.path.join(results_dir, 'mean_map_overall.png'), mape_value)
+    generate_mean_maps(results_df[results_df['Wave_age'] <= wa_y], "Wind-Sea", os.path.join(results_dir, 'mean_map_windsea.png'), mape_value)
+    generate_mean_maps(results_df[results_df['Wave_age'] >= wa_o], "Swell", os.path.join(results_dir, 'mean_map_swell.png'), mape_value)
     print(f"  Visualizations saved in the correct directory: {results_dir}")
 
 def main():
