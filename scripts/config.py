@@ -19,7 +19,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 #  PATHS (Now built from PROJECT_ROOT)
 # ===========================
 # Path to the raw NetCDF file
-raw_df_path = os.path.join(PROJECT_ROOT, 'data', 'raw', 'dados_full2028_2023.nc')
+raw_df_path = os.path.join(PROJECT_ROOT, 'data', 'raw', 'dados_full2018_2023.nc')
 # Path for the processed CSV data
 processed_df_path = os.path.join(PROJECT_ROOT, 'data', 'processed', 'era5_structured_weighted.csv')
 
@@ -48,7 +48,7 @@ random_state = 42
 # 'Steepness_mean_train' feature to give PySR a better physical clue about
 # the dominant wave regime (wind-sea vs. swell) at each location.
 feature_var = [
-    'Wave_age', 'u10_sine', 'mwd_sin', 'mwd1_sin', 'mdww_cos', 'mdts_sin'
+    'Wave_age', 'mdts_cos', 'u10_sine', 'mwd_sin', 'mwd1_sin', 'mdww_cos', 'mdts_sin'
 ]
 
 # Target variable for the regression.
@@ -96,5 +96,15 @@ use_manual_equation_for_swell = False
 # The index of the equation to use from the Hall of Fame (see console output).
 # Index 5 corresponds to the complexity 7 equation with Steepness_mean_train.
 manual_swell_equation_index = 5
+
+
+# ===========================
+#  STATIC MODEL SETTINGS
+# ===========================
+# Se True, ignora o PySR e usa a fórmula fixa  y_swell = (0.242 * waveage) ** sqrt(2.686 - mdts_cos)
+use_static_formulas = True
+
+
+
 
 
