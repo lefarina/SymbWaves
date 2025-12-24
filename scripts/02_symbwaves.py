@@ -224,6 +224,7 @@ def evaluate_performance(y_true, y_pred, test_set, cfg):
     print("="*45 + "\n")
     return {'mape_geral': mape_geral, 'mape_hs': mape_hs}
 
+
 def plot_single_map(ax, lon, lat, data, title, vmin, vmax, cmap='viridis'):
     m = Basemap(ax=ax, projection='merc', llcrnrlat=lat.min()-1, urcrnrlat=lat.max()+1,
                  llcrnrlon=lon.min()-1, urcrnrlon=lon.max()+1, resolution='h')
@@ -231,10 +232,16 @@ def plot_single_map(ax, lon, lat, data, title, vmin, vmax, cmap='viridis'):
     m.drawparallels(np.arange(lat.min(), lat.max()+1, 5), labels=[1,0,0,0])
     m.drawmeridians(np.arange(lon.min(), lon.max()+1, 5), labels=[0,0,0,1])
     lons, lats = np.meshgrid(lon, lat)
-    cs = m.contourf(lons, lats, data, levels=10, latlon=True, cmap=cmap)
-    m.colorbar(cs, location='right'); ax.set_title(title)
+    
+    # --- FIX: Force levels to be identical across subplots ---
+    levels = np.linspace(vmin, vmax, 13) # 13 levels gives 12 colored intervals
+    cs = m.contourf(lons, lats, data, levels=levels, latlon=True, cmap=cmap, extend='both')
+    # ---------------------------------------------------------
+    
+    m.colorbar(cs, location='right')
+    ax.set_title(title)
 
-def generate_mean_maps(df, title_prefix, output_path, mape_value):
+def generate_mean_maps(df, title_prefix, output_path, mape_value, vmin=None, vmax=None, mape_vmax=50):
     if df.empty: return
     print(f"  Generating mean map for: {title_prefix}")
     mean_data = df.groupby(['latitude', 'longitude']).agg(y_pred_mean=('y_pred', 'mean'), y_real_mean=('y_real', 'mean'), mape_mean=('error', 'mean')).reset_index()
@@ -243,12 +250,20 @@ def generate_mean_maps(df, title_prefix, output_path, mape_value):
     grid_pred = mean_data.pivot(index='latitude', columns='longitude', values='y_pred_mean').values
     grid_real = mean_data.pivot(index='latitude', columns='longitude', values='y_real_mean').values
     grid_mape = mean_data.pivot(index='latitude', columns='longitude', values='mape_mean').values
-    vmin, vmax = np.nanmin([grid_pred, grid_real]), np.nanmax([grid_pred, grid_real])
+    
+    if vmin is None: vmin = np.nanmin([grid_pred, grid_real])
+    if vmax is None: vmax = np.nanmax([grid_pred, grid_real])
+    
     fig, axes = plt.subplots(1, 3, figsize=(24, 8)); plt.subplots_adjust(wspace=0.3)
     plot_single_map(axes[0], lons, lats, grid_pred, 'Mean Prediction (ŷ)', vmin, vmax)
     plot_single_map(axes[1], lons, lats, grid_real, 'Mean Ground Truth (y)', vmin, vmax)
-    plot_single_map(axes[2], lons, lats, grid_mape, f'MAPE (%) -- Avg: {mape_value:.2f}%', 0, 100, cmap='Reds')
+    
+    # --- MUDANÇA AQUI: Usando mape_vmax dinâmico ---
+    plot_single_map(axes[2], lons, lats, grid_mape, f'MAPE (%) -- Avg: {mape_value:.2f}%', 0, mape_vmax, cmap='Reds')
+    # -----------------------------------------------
+    
     fig.suptitle(f"{title_prefix} Performance", fontsize=16); plt.savefig(output_path, dpi=150, format='pdf', bbox_inches='tight'); plt.close(fig)
+
 
 def generate_visualizations(models, results_df, metrics, cfg):
     basin = getattr(cfg, 'basin_name', 'south_atlantic')
@@ -278,9 +293,17 @@ def generate_visualizations(models, results_df, metrics, cfg):
     mape_ws = df_ws['error'].mean() if not df_ws.empty else 0
     mape_sw = df_sw['error'].mean() if not df_sw.empty else 0
 
-    generate_mean_maps(results_df, "Overall", os.path.join(results_dir, 'mean_map_overall.pdf'), metrics['mape_geral'])
-    generate_mean_maps(df_ws, "Wind-Sea", os.path.join(results_dir, 'mean_map_windsea.pdf'), mape_ws)
-    generate_mean_maps(df_sw, "Swell", os.path.join(results_dir, 'mean_map_swell.pdf'), mape_sw)
+
+# Overall: Escalas amplas
+    generate_mean_maps(results_df, "Overall", os.path.join(results_dir, 'mean_map_overall.pdf'), metrics['mape_geral'], vmin=0.0, vmax=1.8, mape_vmax=50)
+    
+    # Wind-Sea: Zoom na física (0.1-0.4) e Zoom no erro (0-20%)
+    generate_mean_maps(df_ws, "Wind-Sea", os.path.join(results_dir, 'mean_map_windsea.pdf'), mape_ws, vmin=0.15, vmax=0.4, mape_vmax=20)
+    
+    # Swell: Escalas amplas
+    generate_mean_maps(df_sw, "Swell", os.path.join(results_dir, 'mean_map_swell.pdf'), mape_sw, vmin=0.0, vmax=1.8, mape_vmax=50)
+
+
     
     return mape_ws, mape_sw
 

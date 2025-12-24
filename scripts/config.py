@@ -16,12 +16,12 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Escolha a bacia ativa descomentando APENAS UMA das opções abaixo:
 
 # OPÇÃO 1: SOUTH ATLANTIC
-#BASIN = "south_atlantic"
-#RAW_FILE = "data_south_atlantic_2018_2023.nc"
+BASIN = "south_atlantic"
+RAW_FILE = "data_south_atlantic_2018_2023.nc"
 
 # OPÇÃO 2: NORTH PACIFIC
-BASIN = "north_pacific"
-RAW_FILE = "data_north_pacific_2018_2023.nc"
+#BASIN = "north_pacific"
+#RAW_FILE = "data_north_pacific_2018_2023.nc"
 
 # ===========================
 #  PATHS (Construídos dinamicamente)
@@ -110,10 +110,10 @@ manual_swell_equation_index = 5
 #  STATIC MODEL SETTINGS
 # ===========================
 # If True, the script ignores PySR results and uses the hardcoded laws below.
-use_static_formulas = False
+use_static_formulas = True
 
 # Select which basin's law to apply: "south_atlantic" or "north_pacific"
-static_mode = "north_pacific" 
+static_mode = "south_atlantic"
 
 # FORMULAE REFERENCE:
 # ------------------
