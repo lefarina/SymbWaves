@@ -7,21 +7,28 @@ This version is location-aware and should be kept in the 'scripts' folder.
 """
 import os
 
-# ===========================
-#  PROJECT ROOT PATH (IMPORTANT!)
-# ===========================
-# Automatically determine the project's root directory by going up one level
-# from the current script's location (the 'scripts' folder).
+# Determina a raiz do projeto (um nível acima da pasta scripts)
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# ===========================
+#  BASIN SELECTION
+# ===========================
+# Escolha a bacia ativa descomentando APENAS UMA das opções abaixo:
+
+# OPÇÃO 1: SOUTH ATLANTIC
+#BASIN = "south_atlantic"
+#RAW_FILE = "data_south_atlantic_2018_2023.nc"
+
+# OPÇÃO 2: NORTH PACIFIC
+BASIN = "north_pacific"
+RAW_FILE = "data_north_pacific_2018_2023.nc"
 
 # ===========================
-#  PATHS (Now built from PROJECT_ROOT)
+#  PATHS (Construídos dinamicamente)
 # ===========================
-# Path to the raw NetCDF file
-raw_df_path = os.path.join(PROJECT_ROOT, 'data', 'raw', 'dados_full2018_2023.nc')
-# Path for the processed CSV data
-processed_df_path = os.path.join(PROJECT_ROOT, 'data', 'processed', 'era5_structured_weighted.csv')
+raw_df_path = os.path.join(PROJECT_ROOT, 'data', 'raw', RAW_FILE)
+processed_df_path = os.path.join(PROJECT_ROOT, 'data', 'processed', f'era5_{BASIN}_structured.csv')
+basin_name = BASIN  # Usado pelo script de treino para criar as pastas
 
 
 # ===========================
@@ -37,7 +44,7 @@ total_iterations = 200
 # ===========================
 train_initial_date = '2018-01-01'
 test_initial_date  = '2022-12-31'
-N_SAMPLES = 50_000
+N_SAMPLES = 50_000  #  50000 is used here normally.
 random_state = 42
 
 
@@ -98,13 +105,25 @@ use_manual_equation_for_swell = False
 manual_swell_equation_index = 5
 
 
+
 # ===========================
 #  STATIC MODEL SETTINGS
 # ===========================
-# Se True, ignora o PySR e usa a fórmula fixa  y_swell = (0.242 * waveage) ** sqrt(2.686 - mdts_cos)
-use_static_formulas = True
+# If True, the script ignores PySR results and uses the hardcoded laws below.
+use_static_formulas = False
 
+# Select which basin's law to apply: "south_atlantic" or "north_pacific"
+static_mode = "north_pacific" 
 
+# FORMULAE REFERENCE:
+# ------------------
+# SOUTH ATLANTIC:
+#   y_young = 0.20444 * Wave_age
+#   y_swell = (0.242 * Wave_age) ** sqrt(2.686 - mdts_cos)
+#
+# NORTH PACIFIC:
+#   y_young = 0.19719 * Wave_age
+#   y_swell = (Wave_age / 3.8199) ** sqrt(mdts_cos + 3.1388)
 
 
 
