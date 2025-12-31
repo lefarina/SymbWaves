@@ -77,7 +77,6 @@ logistic_width = 0.2
 # ===========================
 #  VISUALIZATION
 # ===========================
-region_time = '2019-05-15 18:00:00'
 basemap_resolution = 'i'
 MIN_COUNT_PER_CELL = 20
 SAVE_COUNT_MAPS = True
@@ -92,6 +91,14 @@ batch_size = 10_000
 mape_floor_y = 1e-6
 log_floor_y = 1e-9
 
+
+# -------------------------------------------------
+# Visualization flags
+# -------------------------------------------------
+PLOT_LIGHT_PLOTS = True
+PLOT_MAPE_MAPS = True      # default ON
+PLOT_MAE_MAPS  = False     # optional
+PLOT_RMSE_MAPS = False     # optional
 
 
 # ===========================
@@ -110,7 +117,7 @@ manual_swell_equation_index = 5
 #  STATIC MODEL SETTINGS
 # ===========================
 # If True, the script ignores PySR results and uses the hardcoded laws below.
-use_static_formulas = True
+use_static_formulas = False
 
 # Select which basin's law to apply: "south_atlantic" or "north_pacific"
 static_mode = "south_atlantic"
