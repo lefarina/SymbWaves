@@ -1,0 +1,10 @@
+numpy
+pandas
+matplotlib
+xarray
+netCDF4
+tqdm
+scikit-learn
+pysr
+basemap
+basemap-data
